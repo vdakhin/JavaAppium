@@ -86,15 +86,34 @@ public class MyListsTests extends CoreTestCase
 
         SearchPageObject.initSearchInput();
         SearchPageObject.typeSearchLine("Java");
-        SearchPageObject.clickByArticleWithSubstring("Object-oriented programming language");
+        SearchPageObject.clickByArticleWithSubstring("bject-oriented programming language");
 
         ArticlePageObject ArticlePageObject = ArticlePageObjectFactory.get(driver);
         ArticlePageObject.waitForTitleElement();
         String first_article_title = ArticlePageObject.getArticleTitle();
 
+        driver.manage().timeouts().implicitlyWait(1, TimeUnit.SECONDS);
+
         if(Platform.getInstance().isAndroid()) {
             ArticlePageObject.addArticleToNewList(name_of_folder_for_testSaveTwoArticlesToMyList);
         } else {
+            ArticlePageObject.addArticlesToMySaved();
+        }
+
+        if (Platform.getInstance().isMW()) {
+            AuthorizationPageObject Auth = new AuthorizationPageObject(driver);
+
+            Auth.clickAuthButton();
+            Auth.enterLoginData(login, password);
+            Auth.submitForm();
+            ArticlePageObject.waitForTitleElement();
+
+            assertEquals(
+                    "We are not on the same page after login",
+                    first_article_title,
+                    ArticlePageObject.getArticleTitle()
+            );
+
             ArticlePageObject.addArticlesToMySaved();
         }
 
@@ -106,11 +125,11 @@ public class MyListsTests extends CoreTestCase
 
         SearchPageObject.initSearchInput();
 
-        if(Platform.getInstance().isAndroid()) {
+        if(Platform.getInstance().isAndroid() || Platform.getInstance().isMW()) {
             SearchPageObject.typeSearchLine("Java");
         }
 
-        SearchPageObject.clickByArticleWithSubstring("JavaScript");
+        SearchPageObject.clickByArticleWithSubstring("avaScript");
 
         ArticlePageObject.waitForTitleElement();
 
@@ -123,6 +142,7 @@ public class MyListsTests extends CoreTestCase
         ArticlePageObject.closeArticle();
 
         NavigationUI NavigationUI = NavigationUIFactory.get(driver);
+        NavigationUI.openNavigation();
         NavigationUI.clickMyLists();
 
         MyListsPageObject MyListPageObject = MyListsPageObjectFactory.get(driver);
@@ -131,9 +151,12 @@ public class MyListsTests extends CoreTestCase
             MyListPageObject.openFolderByName(name_of_folder_for_testSaveArticleToMyList);
         }
 
+        driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
         MyListPageObject.swipeByArticleToDelete(first_article_title);
         String second_article_title_on_preview = MyListPageObject.getArticleTitle();
+        driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
         MyListPageObject.clickArticleByTitle("JavaScript");
+        driver.manage().timeouts().implicitlyWait(3, TimeUnit.SECONDS);
         String second_article_title_on_the_article_page = ArticlePageObject.getArticleTitle();
 
         assertEquals(
